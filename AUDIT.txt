@@ -1,0 +1,33 @@
+AUDIT & PERBAIKAN — SHEILAON7
+Tanggal audit: 31 Agustus 2026
+
+CAKUPAN
+- 7 file HTML: index.html, antrian.html, deskripsi.html, tiket.html, form.html, qris.html, success.html
+- Pemeriksaan referensi aset lokal
+- Pemeriksaan duplicate ID
+- Pemeriksaan syntax JavaScript inline dengan Node.js --check
+- Pemeriksaan hubungan elemen DOM yang dipanggil JavaScript
+
+TEMUAN UTAMA
+1. BUG KRITIS di form.html: fungsi generateHolders() menyimpan hasil querySelector('.h-nama') ke variabel 'card', padahal hasilnya adalah elemen INPUT. Kode kemudian memanggil card.querySelector(...), yang tidak menemukan elemen anak dan menyebabkan TypeError saat ada draft holder. Dampaknya dapat menghentikan JavaScript form.
+2. form.html membaca draft_holders tanpa try/catch. Data localStorage yang rusak/tidak valid dapat menyebabkan JSON.parse melempar exception dan menghentikan script.
+3. form.html menunggu fetch Formspree tanpa batas waktu. Jika koneksi menggantung, pengguna dapat tertahan sebelum diarahkan ke qris.html.
+4. qris.html mereferensikan poster.jpg yang tidak ada di paket. Elemen tersebut memang disembunyikan dan tidak digunakan oleh JavaScript, sehingga referensinya dihapus sebagai cleanup aman.
+
+PERBAIKAN
+- Memperbaiki lookup holder: cari input terlebih dahulu, lalu gunakan closest('.holder-card') untuk mendapatkan kartu pemegang tiket.
+- Menambahkan validasi Array + try/catch saat membaca draft_holders.
+- Menambahkan AbortController timeout 5 detik untuk request Formspree agar proses tidak menggantung tanpa batas. Redirect tetap berjalan setelah proses tersebut selesai/timeout.
+- Menghapus referensi aset poster.jpg yang tidak tersedia dan tidak digunakan.
+
+VALIDASI SETELAH PERBAIKAN
+- Semua 7 file JavaScript inline lulus Node.js --check.
+- Tidak ditemukan duplicate HTML id.
+- Tidak ditemukan referensi aset lokal yang hilang setelah perbaikan.
+- Semua ID yang dipanggil melalui getElementById() tersedia di HTML masing-masing.
+- Struktur dan fitur utama dipertahankan.
+
+CATATAN
+- Sistem tetap menggunakan localStorage untuk alur tiket.
+- Bukti pembayaran pada qris.html tetap diperlakukan sebagai upload lokal di browser; yang disimpan ke localStorage hanya nama file, bukan file gambarnya. Upload tersebut belum dikirim ke server/backend.
+- QR e-ticket di success.html masih menggunakan layanan QR eksternal api.qrserver.com.
